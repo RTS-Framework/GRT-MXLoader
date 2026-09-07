@@ -1,1 +1,0 @@
-go build -v -trimpath -ldflags "-s -w" -o GRT-MXLoader main.go
