@@ -1,1 +1,1 @@
-go build -v -trimpath -ldflags "-s -w" -o beacon-ext.exe
+go build -v -trimpath -ldflags "-s -w" -o cs-beacon.exe
