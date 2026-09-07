@@ -68,7 +68,6 @@ errno Boot(void* ctx)
         runtime->Memory.Free(image);
         // initialize dll before start beacon
         err = loader->Execute();
-        runtime->Argument.EraseAll();
         break;
     }
     if (err != NO_ERROR || loader == NULL)
@@ -77,7 +76,7 @@ errno Boot(void* ctx)
         return err;
     }
 
-    // call cs beacon entry point and it will be blocked
+    // call beacon entry point and it will be blocked
     switch (version)
     {
     case 0x0400:
@@ -91,6 +90,7 @@ errno Boot(void* ctx)
     default:
         panic(PANIC_UNREACHABLE_CODE);
     }
+    runtime->Argument.EraseAll();
 
     // destroy pe loader and exit runtime
     errno eld = loader->Destroy();
