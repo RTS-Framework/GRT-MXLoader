@@ -113,6 +113,37 @@ func main() {
 		return
 	}
 
+	// select loader template
+	var template []byte
+	switch arch {
+	case "386":
+		template = ldrX86
+		fmt.Println("select template for x86")
+	case "amd64":
+		template = ldrX64
+		fmt.Println("select template for x64")
+	default:
+		fmt.Println("unknown template architecture")
+		return
+	}
+	if len(template) > 0 {
+		options.Template = template
+	}
+
+	fmt.Println("create instance from template")
+	inst, err := beacon.CreateInstance(arch, image, &options)
+	checkError(err)
+
+	if output == "" {
+		output = "instance.bin"
+	}
+	output, err = filepath.Abs(output)
+	checkError(err)
+	fmt.Println("save instance to:", output)
+	err = os.WriteFile(output, inst, 0600) // #nosec
+	checkError(err)
+
+	fmt.Println("create instance successfully")
 }
 
 func extractStage() {
@@ -120,11 +151,16 @@ func extractStage() {
 	checkError(err)
 	stage, err := beacon.ExtractStage(options.Version, image)
 	checkError(err)
+
 	if output == "" {
 		output = "stage.dll"
 	}
+	output, err = filepath.Abs(output)
+	checkError(err)
+	fmt.Println("save stage to:", output)
 	err = os.WriteFile(output, stage, 0600) // #nosec
 	checkError(err)
+
 	fmt.Println("extract Cobalt-Strike beacon stage successfully")
 }
 
