@@ -6,26 +6,28 @@ import (
 	"log"
 	"os"
 
-	"github.com/RTS-Framework/GRT-MXLoader/loader"
+	"github.com/RTS-Framework/GRT-MXLoader/loader/cs-beacon"
 )
 
 var (
-	input  string
-	output string
+	version string
+	input   string
+	output  string
 )
 
 func init() {
+	flag.StringVar(&version, "v", "", "specify the version, default is 4.0")
 	flag.StringVar(&input, "i", "beacon.exe", "stageless beacon exe file path")
 	flag.StringVar(&output, "o", "stage.dll", "path for save stage dll file")
 	flag.Parse()
 }
 
 func main() {
-	beacon, err := os.ReadFile(input) // #nosec
+	data, err := os.ReadFile(input) // #nosec
 	checkError(err)
-	dll, err := loader.ExtractBeaconStage(beacon)
+	dll, err := beacon.ExtractStage(version, data)
 	checkError(err)
-	err = os.WriteFile(output, dll, 0600)
+	err = os.WriteFile(output, dll, 0600) // #nosec
 	checkError(err)
 	fmt.Println("extract Cobalt-Strike beacon stage successfully")
 }
