@@ -1,0 +1,133 @@
+﻿#include "c_types.h"
+#include "win_types.h"
+#include "dll_kernel32.h"
+#include "lib_memory.h"
+#include "hash_api.h"
+#include "errno.h"
+#include "runtime.h"
+#include "boot.h"
+
+// a flag for calculate offset to Argument_Stub
+#pragma warning(push)
+#pragma warning(disable: 4276)
+extern void Argument_Stub();
+#pragma warning(pop)
+
+// NOT using stdio is to ensure that no runtime instructions
+// are introduced to avoid compiler optimization link errors
+// that cause the extracted template to contain incorrect
+// relative/absolute memory addresses.
+
+static LoadLibraryA_t LoadLibraryA;
+static VirtualAlloc_t VirtualAlloc;
+static CreateFileA_t  CreateFileA;
+static WriteFile_t    WriteFile;
+static CloseHandle_t  CloseHandle;
+
+typedef int (*printf_s_t)(const char* format, ...);
+static printf_s_t printf_s;
+
+bool saveStandard();
+bool savePipeline();
+bool saveTemplate(LPSTR path, void* data, uint size);
+
+static void init()
+{
+    LoadLibraryA = FindAPI_A("kernel32.dll", "LoadLibraryA");
+    VirtualAlloc = FindAPI_A("kernel32.dll", "VirtualAlloc");
+    CreateFileA  = FindAPI_A("kernel32.dll", "CreateFileA");
+    WriteFile    = FindAPI_A("kernel32.dll", "WriteFile");
+    CloseHandle  = FindAPI_A("kernel32.dll", "CloseHandle");
+
+    HMODULE hModule = LoadLibraryA("msvcrt.dll");
+    if (hModule == NULL)
+    {
+        return;
+    }
+    printf_s = FindAPI_A("msvcrt.dll", "printf_s");
+}
+
+#pragma comment(linker, "/ENTRY:EntryPoint")
+int EntryPoint()
+{
+    init();
+    if (!saveStandard())
+    {
+        return 1;
+    }
+    if (!savePipeline())
+    {
+        return 2;
+    }
+    printf_s("build template successfully\n");
+    return 0;
+}
+
+bool saveStandard()
+{
+#ifdef _WIN64
+    LPSTR path = "../../dist/standard/Dotnet_x64.bin";
+#elif _WIN32
+    LPSTR path = "../../dist/standard/Dotnet_x86.bin";
+#endif
+    uintptr begin = (uintptr)(&Boot);
+    uintptr end   = (uintptr)(&Argument_Stub);
+    uintptr size  = end - begin;
+
+    // copy standard loader template
+    void* mem = VirtualAlloc(NULL, size, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
+    mem_copy(mem, (byte*)begin, size);
+
+    // calculate pe loader size for replacement
+    uintptr pe_loader_size = (uintptr)(&InitRuntime) - (uintptr)(&InitPELoader);
+
+    // search pe_loader_size stub and replace size
+    uintptr limit = (uintptr)(&InitPELoader) - (uintptr)(&Boot);
+    for (uint i = 0; i < limit; i++)
+    {
+        uint32* stub = (uint32*)((uintptr)mem + i);
+        if (*stub == STUB_PE_LOADER_SIZE)
+        {
+            *stub = (uint32)pe_loader_size;
+            return saveTemplate(path, mem, size);
+        }
+    }
+    return false;
+}
+
+bool savePipeline()
+{
+#ifdef _WIN64
+    LPSTR path = "../../dist/pipeline/Dotnet_x64.bin";
+#elif _WIN32
+    LPSTR path = "../../dist/pipeline/Dotnet_x86.bin";
+#endif
+    uintptr begin = (uintptr)(&Boot);
+    uintptr end   = (uintptr)(&InitPELoader);
+    uintptr size  = end - begin;
+    return saveTemplate(path, (byte*)begin, size);
+}
+
+bool saveTemplate(LPSTR path, void* data, uint size)
+{
+    HANDLE hFile = CreateFileA(
+        path, GENERIC_WRITE, 0, NULL, 
+        CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL
+    );
+    if (hFile == INVALID_HANDLE_VALUE)
+    {
+        printf_s("failed to create output file: 0x%X\n", GetLastErrno());
+        return false;
+    }
+    if (!WriteFile(hFile, data, (DWORD)size, NULL, NULL))
+    {
+        printf_s("failed to write template: 0x%X\n", GetLastErrno());
+        return false;
+    }
+    if (!CloseHandle(hFile))
+    {
+        printf_s("failed to close file: 0x%X\n", GetLastErrno());
+        return false;
+    }
+    return true;
+}
