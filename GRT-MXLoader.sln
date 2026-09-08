@@ -5,6 +5,8 @@ VisualStudioVersion = 17.10.35013.160
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cs-beacon", "builder\cs-beacon\cs-beacon.vcxproj", "{BF89A8CF-B54A-459D-97C4-01FA8E32F36A}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dotnet", "builder\dotnet\dotnet.vcxproj", "{23EAF647-A967-4A1F-8C05-601B0D7638DB}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_stage", "tool\test_stage\test_stage.vcxproj", "{49FFEB54-1F63-4430-AE09-E9A111143869}"
 EndProject
 Global
@@ -17,6 +19,10 @@ Global
 		{BF89A8CF-B54A-459D-97C4-01FA8E32F36A}.Release|x64.Build.0 = Release|x64
 		{BF89A8CF-B54A-459D-97C4-01FA8E32F36A}.Release|x86.ActiveCfg = Release|Win32
 		{BF89A8CF-B54A-459D-97C4-01FA8E32F36A}.Release|x86.Build.0 = Release|Win32
+		{23EAF647-A967-4A1F-8C05-601B0D7638DB}.Release|x64.ActiveCfg = Release|x64
+		{23EAF647-A967-4A1F-8C05-601B0D7638DB}.Release|x64.Build.0 = Release|x64
+		{23EAF647-A967-4A1F-8C05-601B0D7638DB}.Release|x86.ActiveCfg = Release|Win32
+		{23EAF647-A967-4A1F-8C05-601B0D7638DB}.Release|x86.Build.0 = Release|Win32
 		{49FFEB54-1F63-4430-AE09-E9A111143869}.Release|x64.ActiveCfg = Release|x64
 		{49FFEB54-1F63-4430-AE09-E9A111143869}.Release|x64.Build.0 = Release|x64
 		{49FFEB54-1F63-4430-AE09-E9A111143869}.Release|x86.ActiveCfg = Release|Win32
