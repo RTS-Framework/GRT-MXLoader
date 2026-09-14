@@ -37,7 +37,7 @@ int strncmp_a(ANSI a, ANSI b, uint n);
 int strncmp_w(UTF16 a, UTF16 b, uint n);
 
 // stricmp_a is used to compare two ANSI strings, it is case-insensitive.
-//
+// 
 // if a = b, return 0
 // if a > b, return 1
 // if a < b, return -1
@@ -102,5 +102,11 @@ uint strncpy_a(ANSI dst, ANSI src, uint n);
 // it will stop after copying the null terminator.
 // return value is the number of copied characters, exclude the null.
 uint strncpy_w(UTF16 dst, UTF16 src, uint n);
+
+// str2uint_a is used to convert an ANSI decimal string to an unsigned integer.
+bool str2uint_a(ANSI s, uint* value);
+
+// str2uint_w is used to convert a UTF-16 decimal string to an unsigned integer.
+bool str2uint_w(UTF16 s, uint* value);
 
 #endif // LIB_STRING_H
