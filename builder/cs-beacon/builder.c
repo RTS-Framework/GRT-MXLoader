@@ -67,9 +67,9 @@ int EntryPoint()
 bool saveStandard()
 {
 #ifdef _WIN64
-    LPSTR path = "../../dist/standard/CS_Beacon_x64.bin";
+    LPSTR path = "../../dist/standard/CSBeacon_x64.bin";
 #elif _WIN32
-    LPSTR path = "../../dist/standard/CS_Beacon_x86.bin";
+    LPSTR path = "../../dist/standard/CSBeacon_x86.bin";
 #endif
     uintptr begin = (uintptr)(&Boot);
     uintptr end   = (uintptr)(&Argument_Stub);
@@ -99,9 +99,9 @@ bool saveStandard()
 bool savePipeline()
 {
 #ifdef _WIN64
-    LPSTR path = "../../dist/pipeline/CS_Beacon_x64.bin";
+    LPSTR path = "../../dist/pipeline/CSBeacon_x64.bin";
 #elif _WIN32
-    LPSTR path = "../../dist/pipeline/CS_Beacon_x86.bin";
+    LPSTR path = "../../dist/pipeline/CSBeacon_x86.bin";
 #endif
     uintptr begin = (uintptr)(&Boot);
     uintptr end   = (uintptr)(&InitPELoader);
