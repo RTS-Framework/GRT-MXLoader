@@ -40,8 +40,8 @@ echo --------extract dotnet template for x64--------
 cd ..\..
 
 echo ================= copy standard template =================
-copy /Y dist\standard\CS_Beacon_*.bin loader\cs-beacon\template
-copy /Y dist\standard\Dotnet_*.bin    loader\dotnet\template
+copy /Y dist\standard\CSBeacon_*.bin loader\cs-beacon\template
+copy /Y dist\standard\DotNET_*.bin   loader\dotnet\template
 
 echo =================== clean build files ====================
 rd /S /Q "Release"
