@@ -67,6 +67,7 @@ typedef struct {
 
 typedef HANDLE (*ThdNew_t)(ThreadProc_t address, LPVOID parameter, BOOL track);
 typedef void   (*ThdExit_t)();
+typedef void   (*ThdSleep_t)(uint32 milliseconds);
 typedef BOOL   (*ThdLockThread_t)(DWORD id);
 typedef BOOL   (*ThdUnlockThread_t)(DWORD id);
 typedef BOOL   (*ThdGetStatus_t)(TT_Status* status);
@@ -87,6 +88,8 @@ typedef struct {
 } RT_Status;
 #endif // MOD_RESOURCE_H
 
+typedef BOOL (*ResWait_t)(HANDLE hHandle, DWORD dwMilliseconds);
+typedef BOOL (*ResClose_t)(HANDLE hHandle);
 typedef BOOL (*ResLockMutex_t)(HANDLE hMutex);
 typedef BOOL (*ResUnlockMutex_t)(HANDLE hMutex);
 typedef BOOL (*ResLockEvent_t)(HANDLE hEvent);
@@ -237,10 +240,10 @@ typedef errno (*CryptoFreeDLL_t)();
 // =================================Runtime=================================
 
 // about random module
-//
+// 
 // RandIntX maybe return negative value.
 // RandXxxN is used to generate random value in [0, n).
-//
+// 
 // RandSequence is used to generate random sequence with range.
 // example: RandSequence(array, 4) will set array like [0, 3, 1, 2]
 
@@ -272,7 +275,7 @@ typedef void   (*RandBuffer_t)(void* buf, int64 size);
 typedef void   (*RandSequence_t)(int* array, int n);
 
 // about encoding module
-//
+// 
 // if dst is NULL, it only calculate the output length.
 // it will return -1 when call Decode with invalid data.
 typedef uint (*HexEncode_t)(void* src, uint len, byte* dst);
@@ -631,9 +634,9 @@ typedef struct {
     } Memory;
 
     struct {
-        ThdNew_t  New;
-        ThdExit_t Exit;
-        Sleep_t   Sleep;
+        ThdNew_t   New;
+        ThdExit_t  Exit;
+        ThdSleep_t Sleep;
 
         ThdLockThread_t   Lock;
         ThdUnlockThread_t Unlock;
@@ -642,6 +645,9 @@ typedef struct {
     } Thread;
 
     struct {
+        ResWait_t  Wait;
+        ResClose_t Close;
+
         ResLockMutex_t           LockMutex;
         ResUnlockMutex_t         UnlockMutex;
         ResLockEvent_t           LockEvent;
