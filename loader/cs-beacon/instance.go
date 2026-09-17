@@ -15,10 +15,10 @@ import (
 var _ embed.FS
 
 var (
-	//go:embed template/CS_Beacon_x86.bin
+	//go:embed template/CSBeacon_x86.bin
 	defaultTemplateX86 []byte
 
-	//go:embed template/CS_Beacon_x64.bin
+	//go:embed template/CSBeacon_x64.bin
 	defaultTemplateX64 []byte
 )
 
@@ -27,7 +27,7 @@ type Options struct {
 	// set the custom loader template, it only lacked argument stub.
 	Template []byte `toml:"template" json:"template"`
 
-	// specify the version of the Cobalt-Strike, default is the 4.0
+	// specify the version of the Cobalt-Strike, default is the "4.0".
 	Version string `toml:"version" json:"version"`
 
 	// ignore instantiate options about runtime.
@@ -39,6 +39,9 @@ type Options struct {
 	// set additional arguments for upper beacon image.
 	// all the ID must greater than 64.
 	Arguments []*argument.Arg `toml:"arguments" json:"arguments"`
+
+	// only for test fake stage.
+	testWait bool
 }
 
 // CreateInstance is used to create instance from PE Loader template.
@@ -56,6 +59,8 @@ func CreateInstance(arch string, image loader.Payload, opts *Options) ([]byte, e
 	if err != nil {
 		return nil, fmt.Errorf("invalid %s mode config: %s", image.Mode(), err)
 	}
+	// test option
+	testWait := encodeToBOOL(opts.testWait)
 	// select loader template
 	var defaultTemplate []byte
 	switch arch {
@@ -79,6 +84,7 @@ func CreateInstance(arch string, image loader.Payload, opts *Options) ([]byte, e
 	args := []*argument.Arg{
 		{ID: 1, Data: version},
 		{ID: 2, Data: peImage},
+		{ID: 9, Data: testWait},
 	}
 	// process additional arguments
 	for _, arg := range opts.Arguments {
@@ -92,6 +98,13 @@ func CreateInstance(arch string, image loader.Payload, opts *Options) ([]byte, e
 		return nil, fmt.Errorf("failed to encode argument: %s", err)
 	}
 	return append(inst, stub...), nil
+}
+
+func encodeToBOOL(b bool) []byte {
+	if b {
+		return []byte{1, 0, 0, 0}
+	}
+	return []byte{0, 0, 0, 0}
 }
 
 func instantiateFromTemplate(opts *Options, template []byte) ([]byte, error) {
