@@ -63,9 +63,9 @@ func main() {
 	if tplDir != "" {
 		fmt.Println("load custom templates")
 		var err error
-		ldrX64, err = os.ReadFile(filepath.Join(tplDir, "CS_Beacon_x64.bin")) // #nosec
+		ldrX64, err = os.ReadFile(filepath.Join(tplDir, "CSBeacon_x64.bin")) // #nosec
 		checkError(err)
-		ldrX86, err = os.ReadFile(filepath.Join(tplDir, "CS_Beacon_x86.bin")) // #nosec
+		ldrX86, err = os.ReadFile(filepath.Join(tplDir, "CSBeacon_x86.bin")) // #nosec
 		checkError(err)
 	}
 
