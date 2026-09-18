@@ -36,7 +36,7 @@ func TestCreateInstance(t *testing.T) {
 	})
 
 	t.Run("custom template", func(t *testing.T) {
-		template, err := os.ReadFile("../../dist/standard/CS_Beacon_x86.bin")
+		template, err := os.ReadFile("../../dist/standard/CSBeacon_x86.bin")
 		require.NoError(t, err)
 		opts := Options{
 			Template: template,
@@ -48,7 +48,7 @@ func TestCreateInstance(t *testing.T) {
 	})
 
 	t.Run("ignore instantiate options", func(t *testing.T) {
-		template, err := os.ReadFile("../../dist/pipeline/CS_Beacon_x86.bin")
+		template, err := os.ReadFile("../../dist/pipeline/CSBeacon_x86.bin")
 		require.NoError(t, err)
 		opts := Options{
 			Template:       template,
@@ -199,7 +199,10 @@ func testInstanceStandardEmbed(t *testing.T) {
 	require.NoError(t, err)
 	image := loader.NewEmbed(stage, nil)
 
-	inst, err := CreateInstance(runtime.GOARCH, image, nil)
+	opts := &Options{
+		testWait: true,
+	}
+	inst, err := CreateInstance(runtime.GOARCH, image, opts)
 	require.NoError(t, err)
 
 	testLoadInstance(t, inst)
@@ -215,7 +218,10 @@ func testInstanceStandardFile(t *testing.T) {
 	}
 	image := loader.NewFile(path)
 
-	inst, err := CreateInstance(runtime.GOARCH, image, nil)
+	opts := &Options{
+		testWait: true,
+	}
+	inst, err := CreateInstance(runtime.GOARCH, image, opts)
 	require.NoError(t, err)
 
 	testLoadInstance(t, inst)
@@ -257,11 +263,11 @@ func testInstanceStandardHTTP(t *testing.T) {
 	headers := make(http.Header)
 	headers.Set("Header1", "h1")
 	headers.Set("Header2", "h2")
-	opts := &loader.HTTPOptions{
+	httpOpts := &loader.HTTPOptions{
 		Headers:   headers,
 		UserAgent: "ua",
 	}
-	opts.Headers.Set("Header1", "h1")
+	httpOpts.Headers.Set("Header1", "h1")
 
 	var URL string
 	switch runtime.GOARCH {
@@ -270,9 +276,12 @@ func testInstanceStandardHTTP(t *testing.T) {
 	case "amd64":
 		URL = fmt.Sprintf("http://%s/stage_x64.dat", httpAddr)
 	}
-	image := loader.NewHTTP(URL, opts)
+	image := loader.NewHTTP(URL, httpOpts)
 
-	inst, err := CreateInstance(runtime.GOARCH, image, nil)
+	opts := &Options{
+		testWait: true,
+	}
+	inst, err := CreateInstance(runtime.GOARCH, image, opts)
 	require.NoError(t, err)
 
 	testLoadInstance(t, inst)
@@ -292,12 +301,12 @@ func TestInstance_Pipeline(t *testing.T) {
 		require.NoError(t, err)
 		image := loader.NewEmbed(stage, nil)
 
-		opts := Options{
+		opts := &Options{
 			Template:       testBuildTemplate(t),
 			IgnoreInstOpts: true,
+			testWait:       true,
 		}
-
-		inst, err := CreateInstance("386", image, &opts)
+		inst, err := CreateInstance("386", image, opts)
 		require.NoError(t, err)
 
 		testLoadInstance(t, inst)
@@ -312,12 +321,12 @@ func TestInstance_Pipeline(t *testing.T) {
 		require.NoError(t, err)
 		image := loader.NewEmbed(stage, nil)
 
-		opts := Options{
+		opts := &Options{
 			Template:       testBuildTemplate(t),
 			IgnoreInstOpts: true,
+			testWait:       true,
 		}
-
-		inst, err := CreateInstance("amd64", image, &opts)
+		inst, err := CreateInstance("amd64", image, opts)
 		require.NoError(t, err)
 
 		testLoadInstance(t, inst)
@@ -333,14 +342,14 @@ func testBuildTemplate(t *testing.T) []byte {
 	)
 	switch runtime.GOARCH {
 	case "386":
-		boot, err = os.ReadFile("../../dist/pipeline/CS_Beacon_x86.bin")
+		boot, err = os.ReadFile("../../dist/pipeline/CSBeacon_x86.bin")
 		require.NoError(t, err)
 		ldr, err = os.ReadFile("../../asm/inst/pe_loader_x86.inst")
 		require.NoError(t, err)
 		rti, err = os.ReadFile("../../asm/inst/runtime_x86.inst")
 		require.NoError(t, err)
 	case "amd64":
-		boot, err = os.ReadFile("../../dist/pipeline/CS_Beacon_x64.bin")
+		boot, err = os.ReadFile("../../dist/pipeline/CSBeacon_x64.bin")
 		require.NoError(t, err)
 		ldr, err = os.ReadFile("../../asm/inst/pe_loader_x64.inst")
 		require.NoError(t, err)
