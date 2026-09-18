@@ -19,7 +19,6 @@ extern void Argument_Stub();
 // relative/absolute memory addresses.
 
 static LoadLibraryA_t LoadLibraryA;
-static VirtualAlloc_t VirtualAlloc;
 static CreateFileA_t  CreateFileA;
 static WriteFile_t    WriteFile;
 static CloseHandle_t  CloseHandle;
@@ -34,7 +33,6 @@ bool saveTemplate(LPSTR path, void* data, uint size);
 static void init()
 {
     LoadLibraryA = FindAPI_A("kernel32.dll", "LoadLibraryA");
-    VirtualAlloc = FindAPI_A("kernel32.dll", "VirtualAlloc");
     CreateFileA  = FindAPI_A("kernel32.dll", "CreateFileA");
     WriteFile    = FindAPI_A("kernel32.dll", "WriteFile");
     CloseHandle  = FindAPI_A("kernel32.dll", "CloseHandle");
@@ -66,44 +64,25 @@ int EntryPoint()
 bool saveStandard()
 {
 #ifdef _WIN64
-    LPSTR path = "../../dist/standard/Dotnet_x64.bin";
+    LPSTR path = "../../dist/standard/DotNET_x64.bin";
 #elif _WIN32
-    LPSTR path = "../../dist/standard/Dotnet_x86.bin";
+    LPSTR path = "../../dist/standard/DotNET_x86.bin";
 #endif
     uintptr begin = (uintptr)(&Boot);
     uintptr end   = (uintptr)(&Argument_Stub);
     uintptr size  = end - begin;
-
-    // copy standard loader template
-    void* mem = VirtualAlloc(NULL, size, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
-    mem_copy(mem, (byte*)begin, size);
-
-    // calculate pe loader size for replacement
-    uintptr pe_loader_size = (uintptr)(&InitRuntime) - (uintptr)(&InitPELoader);
-
-    // search pe_loader_size stub and replace size
-    uintptr limit = (uintptr)(&InitPELoader) - (uintptr)(&Boot);
-    for (uint i = 0; i < limit; i++)
-    {
-        uint32* stub = (uint32*)((uintptr)mem + i);
-        if (*stub == STUB_PE_LOADER_SIZE)
-        {
-            *stub = (uint32)pe_loader_size;
-            return saveTemplate(path, mem, size);
-        }
-    }
-    return false;
+    return saveTemplate(path, (byte*)begin, size);
 }
 
 bool savePipeline()
 {
 #ifdef _WIN64
-    LPSTR path = "../../dist/pipeline/Dotnet_x64.bin";
+    LPSTR path = "../../dist/pipeline/DotNET_x64.bin";
 #elif _WIN32
-    LPSTR path = "../../dist/pipeline/Dotnet_x86.bin";
+    LPSTR path = "../../dist/pipeline/DotNET_x86.bin";
 #endif
     uintptr begin = (uintptr)(&Boot);
-    uintptr end   = (uintptr)(&InitPELoader);
+    uintptr end   = (uintptr)(&InitRuntime);
     uintptr size  = end - begin;
     return saveTemplate(path, (byte*)begin, size);
 }
