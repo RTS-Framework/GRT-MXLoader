@@ -11,8 +11,10 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unsafe"
 
 	"github.com/stretchr/testify/require"
+	"golang.org/x/sys/windows"
 
 	"github.com/RTS-Framework/GRT-Develop/argument"
 	"github.com/RTS-Framework/GRT-Develop/instance"
@@ -330,6 +332,78 @@ func TestInstance_Pipeline(t *testing.T) {
 		require.NoError(t, err)
 
 		testLoadInstance(t, inst)
+	})
+}
+
+func TestInstance_Simulate(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		return
+	}
+
+	t.Run("x86", func(t *testing.T) {
+		if runtime.GOARCH != "386" {
+			return
+		}
+
+		stage, err := os.ReadFile("testdata/stage_x86.dat")
+		require.NoError(t, err)
+		image := loader.NewEmbed(stage, nil)
+
+		opts := &Options{
+			Template:       testBuildTemplate(t),
+			IgnoreInstOpts: true,
+		}
+		inst, err := CreateInstance("386", image, opts)
+		require.NoError(t, err)
+
+		now := time.Now()
+		addr := xsyscall.LoadInstance(t, inst)
+		ret, _, _ := xsyscall.SyscallN(addr, 0)
+		require.Zero(t, ret, fmt.Sprintf("0x%X", ret))
+		d := time.Since(now)
+		require.Less(t, d, 250*time.Millisecond)
+
+		// wait instance exit
+		time.Sleep(3 * time.Second)
+
+		// check memory page has been released
+		mbi := windows.MemoryBasicInformation{}
+		err = windows.VirtualQuery(addr, &mbi, unsafe.Sizeof(mbi))
+		require.NoError(t, err)
+		require.Zero(t, mbi.AllocationBase)
+	})
+
+	t.Run("x64", func(t *testing.T) {
+		if runtime.GOARCH != "amd64" {
+			return
+		}
+
+		stage, err := os.ReadFile("testdata/stage_x64.dat")
+		require.NoError(t, err)
+		image := loader.NewEmbed(stage, nil)
+
+		opts := &Options{
+			Template:       testBuildTemplate(t),
+			IgnoreInstOpts: true,
+		}
+		inst, err := CreateInstance("amd64", image, opts)
+		require.NoError(t, err)
+
+		now := time.Now()
+		addr := xsyscall.LoadInstance(t, inst)
+		ret, _, _ := xsyscall.SyscallN(addr, 0)
+		require.Zero(t, ret, fmt.Sprintf("0x%X", ret))
+		d := time.Since(now)
+		require.Less(t, d, 250*time.Millisecond)
+
+		// wait instance exit
+		time.Sleep(3 * time.Second)
+
+		// check memory page has been released
+		mbi := windows.MemoryBasicInformation{}
+		err = windows.VirtualQuery(addr, &mbi, unsafe.Sizeof(mbi))
+		require.NoError(t, err)
+		require.Zero(t, mbi.AllocationBase)
 	})
 }
 
