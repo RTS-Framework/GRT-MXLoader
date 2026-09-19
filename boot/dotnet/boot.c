@@ -22,7 +22,7 @@ errno Boot(void* ctx)
         return GetLastErrno();
     }
 
-    // reserved extended arguments
+    // reserved context and extended arguments
     (void)ctx;
 
     // store boot configuration
@@ -55,7 +55,6 @@ errno Boot(void* ctx)
     }
 
 
-
     // exit runtime
     errno ere = runtime->Core.Exit();
     if (ere != NO_ERROR && err == NO_ERROR)
@@ -76,13 +75,17 @@ static errno loadConfig(Runtime_M* runtime, Config* config)
     {
         return ERR_EMPTY_PE_IMAGE_DATA;
     }
-    if (!runtime->Argument.GetValue(ARG_ID_WAIT_MAIN, &config->WaitMain, &size))
+    if (!runtime->Argument.GetValue(ARG_ID_CMDLINE, &config->CommandLine, &size))
     {
-        return ERR_NOT_FOUND_WAIT_MAIN;
+        return ERR_NOT_FOUND_CMDLINE;
+    }
+    if (!runtime->Argument.GetValue(ARG_ID_WAIT, &config->Wait, &size))
+    {
+        return ERR_NOT_FOUND_WAIT;
     }
     if (size != sizeof(BOOL))
     {
-        return ERR_INVALID_WAIT_MAIN;
+        return ERR_INVALID_WAIT;
     }
     return NO_ERROR;
 }
