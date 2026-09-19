@@ -4,9 +4,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/RTS-Framework/GRT-Develop/argument"
 	"github.com/RTS-Framework/GRT-MXLoader/loader"
-	"github.com/stretchr/testify/require"
 )
 
 func TestCreateInstance(t *testing.T) {
@@ -29,6 +30,26 @@ func TestCreateInstance(t *testing.T) {
 		require.NoError(t, err)
 		opts := Options{
 			Template: template,
+		}
+
+		inst, err := CreateInstance("386", image, &opts)
+		require.NoError(t, err)
+		require.NotNil(t, inst)
+	})
+
+	t.Run("with command line", func(t *testing.T) {
+		opts := Options{
+			CommandLine: "-p1 123 -p2 456",
+		}
+
+		inst, err := CreateInstance("386", image, &opts)
+		require.NoError(t, err)
+		require.NotNil(t, inst)
+	})
+
+	t.Run("wait", func(t *testing.T) {
+		opts := Options{
+			Wait: true,
 		}
 
 		inst, err := CreateInstance("386", image, &opts)
