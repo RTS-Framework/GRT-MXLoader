@@ -8,6 +8,7 @@ import (
 
 	"github.com/RTS-Framework/GRT-Develop/argument"
 	"github.com/RTS-Framework/GRT-Develop/instance"
+	"github.com/RTS-Framework/GRT-Develop/types"
 	"github.com/RTS-Framework/GRT-MXLoader/loader"
 )
 
@@ -27,8 +28,11 @@ type Options struct {
 	// set the custom loader template, it only lacked argument stub.
 	Template []byte `toml:"template" json:"template"`
 
-	// wait main thread execute finish.
-	WaitMain bool `toml:"wait_main" json:"wait_main"`
+	// set the command line argument about the image.
+	CommandLine string `toml:"cmd_line" json:"cmd_line"`
+
+	// wait Main() or target function execute finish.
+	Wait bool `toml:"wait" json:"wait"`
 
 	// ignore instantiate options about runtime.
 	IgnoreInstOpts bool `toml:"ignore_inst_opts" json:"ignore_inst_opts"`
@@ -51,8 +55,13 @@ func CreateInstance(arch string, image loader.Payload, opts *Options) ([]byte, e
 	if err != nil {
 		return nil, fmt.Errorf("invalid %s mode config: %s", image.Mode(), err)
 	}
-	// test option
-	waitMain := encodeToBOOL(opts.WaitMain)
+	// process command line
+	var cmdLine []byte
+	if opts.CommandLine != "" {
+		cmdLine = types.StringToUTF16(opts.CommandLine)
+	}
+	// process wait flag
+	wait := encodeToBOOL(opts.Wait)
 	// select loader template
 	var defaultTemplate []byte
 	switch arch {
@@ -75,7 +84,8 @@ func CreateInstance(arch string, image loader.Payload, opts *Options) ([]byte, e
 	// encode arguments at tail of instance
 	args := []*argument.Arg{
 		{ID: 1, Data: peImage},
-		{ID: 2, Data: waitMain},
+		{ID: 2, Data: cmdLine},
+		{ID: 3, Data: wait},
 	}
 	// process additional arguments
 	for _, arg := range opts.Arguments {
