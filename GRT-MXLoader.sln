@@ -3,13 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35013.160
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "builder", "builder", "{99125DCB-44D2-4E6E-B2B9-3A937C1093C3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "payload", "payload", "{C2C3FAB1-2E91-4FC2-A3AE-89E2A0609556}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{841DE30B-6163-4026-9B0F-ADA33527178E}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cs-beacon", "builder\cs-beacon\cs-beacon.vcxproj", "{BF89A8CF-B54A-459D-97C4-01FA8E32F36A}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dotnet", "builder\dotnet\dotnet.vcxproj", "{23EAF647-A967-4A1F-8C05-601B0D7638DB}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_stage", "test\payload\test_stage\test_stage.vcxproj", "{49FFEB54-1F63-4430-AE09-E9A111143869}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cs-beacon", "payload\cs-beacon\payload.vcxproj", "{49FFEB54-1F63-4430-AE09-E9A111143869}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "test\test.vcxproj", "{9923A7BB-EEEE-45D1-8E47-DD54792C9EBF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cs-beacon", "test\cs-beacon\test.vcxproj", "{9923A7BB-EEEE-45D1-8E47-DD54792C9EBF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,6 +42,12 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{BF89A8CF-B54A-459D-97C4-01FA8E32F36A} = {99125DCB-44D2-4E6E-B2B9-3A937C1093C3}
+		{23EAF647-A967-4A1F-8C05-601B0D7638DB} = {99125DCB-44D2-4E6E-B2B9-3A937C1093C3}
+		{49FFEB54-1F63-4430-AE09-E9A111143869} = {C2C3FAB1-2E91-4FC2-A3AE-89E2A0609556}
+		{9923A7BB-EEEE-45D1-8E47-DD54792C9EBF} = {841DE30B-6163-4026-9B0F-ADA33527178E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {588C0336-C027-48AA-8561-B614ED7F1FA8}
