@@ -12,20 +12,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dll_main.c" />
-    <ClCompile Include="..\..\src\lib_memory.c" />
-    <ClCompile Include="..\..\src\lib_string.c" />
-    <ClCompile Include="..\..\src\pe_image.c" />
-    <ClCompile Include="..\..\src\hash_api.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\c_types.h" />
     <ClInclude Include="..\..\include\win_types.h" />
-    <ClInclude Include="..\..\include\win_structs.h" />
     <ClInclude Include="..\..\include\dll_kernel32.h" />
-    <ClInclude Include="..\..\include\lib_memory.h" />
-    <ClInclude Include="..\..\include\lib_string.h" />
-    <ClInclude Include="..\..\include\pe_image.h" />
-    <ClInclude Include="..\..\include\hash_api.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
