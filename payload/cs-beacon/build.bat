@@ -8,8 +8,8 @@ if "%VisualStudio%" == "" (
 call "%VisualStudio%\VC\Auxiliary\Build\vcvars64.bat"
 
 echo ================== generate test stage ===================
-MSBuild.exe ..\..\GRT-MXLoader.sln /t:test_stage /p:Configuration=Release /p:Platform=x86
-MSBuild.exe ..\..\GRT-MXLoader.sln /t:test_stage /p:Configuration=Release /p:Platform=x64
+MSBuild.exe ..\..\GRT-MXLoader.sln /t:payload/fake_stage /p:Configuration=Release /p:Platform=x86
+MSBuild.exe ..\..\GRT-MXLoader.sln /t:payload/fake_stage /p:Configuration=Release /p:Platform=x64
 
 echo ==================== copy test stage =====================
 copy /Y ..\..\Release\test_stage.dll     ..\..\loader\cs-beacon\testdata\stage_x86.dat
