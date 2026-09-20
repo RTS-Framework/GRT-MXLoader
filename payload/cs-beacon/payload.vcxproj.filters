@@ -14,18 +14,6 @@
     <ClCompile Include="dll_main.c">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\hash_api.c">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\lib_memory.c">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\lib_string.c">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\pe_image.c">
-      <Filter>Source</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\c_types.h">
@@ -35,21 +23,6 @@
       <Filter>Header</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\dll_kernel32.h">
-      <Filter>Header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\hash_api.h">
-      <Filter>Header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\pe_image.h">
-      <Filter>Header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\win_structs.h">
-      <Filter>Header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\lib_string.h">
-      <Filter>Header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\lib_memory.h">
       <Filter>Header</Filter>
     </ClInclude>
   </ItemGroup>
