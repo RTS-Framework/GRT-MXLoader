@@ -31,11 +31,19 @@
 
 #define STUB_PE_LOADER_SIZE 0x2026ABCD
 
+#define CTX_TYPE_TEST 0x01
+
 typedef struct {
     uint16 Version;
     void*  Image;
     BOOL   TestWait;
 } Config;
+
+typedef struct {
+    uint  Type;
+    void* Image;
+    void* Runtime;
+} CTX_Test;
 
 errno Boot(void* ctx);
 
