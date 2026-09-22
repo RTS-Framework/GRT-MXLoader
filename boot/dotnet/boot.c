@@ -15,15 +15,32 @@ static void* loadImageFromHTTP(Runtime_M* runtime, byte* config);
 
 errno Boot(void* ctx)
 {
-    // initialize Gleam-RT for PE Loader
-    Runtime_M* runtime = InitRuntime(GetFuncAddr(&Boot), NULL);
-    if (runtime == NULL)
+    // process extended context
+    CTX_Test* testCtx = NULL;
+    if (ctx != NULL)
     {
-        return GetLastErrno();
+        switch (*(uint*)ctx)
+        {
+        case CTX_TYPE_TEST:
+            testCtx = ctx;
+            break;
+        default:
+            break;
+        }
     }
 
-    // reserved context and extended arguments
-    (void)ctx;
+    // initialize Gleam-RT for PE Loader
+    Runtime_M* runtime = NULL;
+    if (testCtx == NULL)
+    {
+        runtime = initRuntime();
+        if (runtime == NULL)
+        {
+            return GetLastErrno();
+        }
+    } else {
+        runtime = testCtx->Runtime;
+    }
 
     // store boot configuration
     Config config;
@@ -32,20 +49,31 @@ errno Boot(void* ctx)
     errno err = NO_ERROR;
     for (;;)
     {
-        // load config from argument stub
-        err = loadConfig(runtime, &config);
-        if (err != NO_ERROR)
+        void* image = NULL;
+        if (testCtx == NULL)
         {
-            break;
-        }
-        // prepare pe image data to config
-        void* image = loadImage(runtime, config.Image);
-        if (image == NULL)
-        {
-            err = GetLastErrno();
-            break;
+            // load config from argument stub
+            err = loadConfig(runtime, &config);
+            if (err != NO_ERROR)
+            {
+                break;
+            }
+            // prepare pe image data to config
+            image = loadImage(runtime, config.Image);
+            if (image == NULL)
+            {
+                err = GetLastErrno();
+                break;
+            }
+        } else {
+            image = testCtx->Image;
+            config.CommandLine = testCtx->CommandLine;
+            config.Wait = true;
         }
         // prepare .NET runtime
+
+        runtime->Memory.Free(image);
+
         break;
     }
     if (err != NO_ERROR)
