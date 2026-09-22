@@ -26,11 +26,20 @@
 #define ERR_INVALID_HTTP_CONFIG      0x7F00FF0A
 #define ERR_INVALID_HTTP_STATUS_CODE 0x7F00FF0B
 
+#define CTX_TYPE_TEST 0x01
+
 typedef struct {
     void* Image;
     void* CommandLine;
     BOOL  Wait;
 } Config;
+
+typedef struct {
+    uint  Type;
+    void* Image;
+    void* CommandLine;
+    void* Runtime;
+} CTX_Test;
 
 errno Boot(void* ctx);
 
