@@ -80,16 +80,16 @@ bool saveStandard()
     mem_copy(mem, (byte*)begin, size);
 
     // calculate pe loader size for replacement
-    uintptr pe_loader_size = (uintptr)(&InitRuntime) - (uintptr)(&InitPELoader);
+    uintptr peLoaderSize = (uintptr)(&InitRuntime) - (uintptr)(&InitPELoader);
 
-    // search pe_loader_size stub and replace size
+    // search pe loader size stub and replace it
     uintptr limit = (uintptr)(&InitPELoader) - (uintptr)(&Boot);
     for (uint i = 0; i < limit; i++)
     {
         uint32* stub = (uint32*)((uintptr)mem + i);
         if (*stub == STUB_PE_LOADER_SIZE)
         {
-            *stub = (uint32)pe_loader_size;
+            *stub = (uint32)peLoaderSize;
             return saveTemplate(path, mem, size);
         }
     }
