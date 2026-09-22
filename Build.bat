@@ -19,10 +19,10 @@ rd /S /Q "builder\dotnet\Release"
 rd /S /Q "builder\dotnet\x64"
 
 echo ==================== generate builder ====================
-MSBuild.exe GRT-MXLoader.sln /t:cs-beacon /p:Configuration=Release /p:Platform=x86
-MSBuild.exe GRT-MXLoader.sln /t:cs-beacon /p:Configuration=Release /p:Platform=x64
-MSBuild.exe GRT-MXLoader.sln /t:dotnet    /p:Configuration=Release /p:Platform=x86
-MSBuild.exe GRT-MXLoader.sln /t:dotnet    /p:Configuration=Release /p:Platform=x64
+MSBuild.exe GRT-MXLoader.sln /t:builder\cs-beacon /p:Configuration=Release /p:Platform=x86
+MSBuild.exe GRT-MXLoader.sln /t:builder\cs-beacon /p:Configuration=Release /p:Platform=x64
+MSBuild.exe GRT-MXLoader.sln /t:builder\dotnet    /p:Configuration=Release /p:Platform=x86
+MSBuild.exe GRT-MXLoader.sln /t:builder\dotnet    /p:Configuration=Release /p:Platform=x64
 
 echo ================ extract loader template =================
 cd builder\cs-beacon
