@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotnet_dll", "payload\dotne
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cs-beacon", "test\cs-beacon\test.vcxproj", "{9923A7BB-EEEE-45D1-8E47-DD54792C9EBF}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dotnet", "test\dotnet\test.vcxproj", "{77A38B90-2625-4FD2-8415-42CEA105C9C1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Release|Any CPU = Release|Any CPU
@@ -64,6 +66,12 @@ Global
 		{9923A7BB-EEEE-45D1-8E47-DD54792C9EBF}.Release|x64.Build.0 = Release|x64
 		{9923A7BB-EEEE-45D1-8E47-DD54792C9EBF}.Release|x86.ActiveCfg = Release|Win32
 		{9923A7BB-EEEE-45D1-8E47-DD54792C9EBF}.Release|x86.Build.0 = Release|Win32
+		{77A38B90-2625-4FD2-8415-42CEA105C9C1}.Release|Any CPU.ActiveCfg = Release|x64
+		{77A38B90-2625-4FD2-8415-42CEA105C9C1}.Release|Any CPU.Build.0 = Release|x64
+		{77A38B90-2625-4FD2-8415-42CEA105C9C1}.Release|x64.ActiveCfg = Release|x64
+		{77A38B90-2625-4FD2-8415-42CEA105C9C1}.Release|x64.Build.0 = Release|x64
+		{77A38B90-2625-4FD2-8415-42CEA105C9C1}.Release|x86.ActiveCfg = Release|Win32
+		{77A38B90-2625-4FD2-8415-42CEA105C9C1}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -75,6 +83,7 @@ Global
 		{CEE4E8EB-637C-40E7-9E19-5996537CBB4D} = {C2C3FAB1-2E91-4FC2-A3AE-89E2A0609556}
 		{C9FBA124-FB25-4CE6-A365-EE0A9E4F84E5} = {C2C3FAB1-2E91-4FC2-A3AE-89E2A0609556}
 		{9923A7BB-EEEE-45D1-8E47-DD54792C9EBF} = {841DE30B-6163-4026-9B0F-ADA33527178E}
+		{77A38B90-2625-4FD2-8415-42CEA105C9C1} = {841DE30B-6163-4026-9B0F-ADA33527178E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {588C0336-C027-48AA-8561-B614ED7F1FA8}
