@@ -8,24 +8,28 @@
 #include "dotnet/boot.c"
 #include "test.h"
 
-Runtime_M* runtime;
-
-bool TestInit()
+static Runtime_M* initRuntime()
 {
     Runtime_Opts opts = {
         .NotEraseInstruction = true,
     };
-    runtime = InitRuntime(NULL, &opts);
+    Runtime_M* runtime = InitRuntime(NULL, &opts);
     if (runtime == NULL)
     {
         printf_s("failed to initialize runtime: 0x%X\n", GetLastErrno());
-        return false;
+        return NULL;
     }
-    return true;
+    return runtime;
 }
 
 bool TestEXE()
 {
+    Runtime_M* runtime = initRuntime();
+    if (runtime == NULL)
+    {
+        return false;
+    }
+
     // load image for test
     LPSTR path = "..\\..\\loader\\dotnet\\testdata\\dotnet_exe.dat";
     databuf image;
@@ -57,6 +61,35 @@ bool TestEXE()
 
 bool TestDLL()
 {
-    // Boot(NULL);
+    Runtime_M* runtime = initRuntime();
+    if (runtime == NULL)
+    {
+        return false;
+    }
+
+    // load image for test
+    LPSTR path = "..\\..\\loader\\dotnet\\testdata\\dotnet_dll.dat";
+    databuf image;
+    errno err = runtime->WinFile.ReadFileA(path, &image);
+    if (err != NO_ERROR)
+    {
+        printf_s("failed to open image: 0x%X\n", err);
+        return false;
+    }
+
+    // build test context
+    CTX_Test ctx = {
+        .Type    = CTX_TYPE_TEST,
+        .Image   = image.buf,
+        .Runtime = runtime,
+    };
+
+    // boot with test context
+    err = Boot(&ctx);
+    if (err != NO_ERROR)
+    {
+        printf_s("failed to boot: 0x%X\n", err);
+        return false;
+    }
     return true;
 }
