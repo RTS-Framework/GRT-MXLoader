@@ -16,8 +16,6 @@ copy /Y bin\Release\dotnet_exe.exe ..\..\loader\dotnet\testdata\dotnet_exe.dat
 echo =================== clean build files ====================
 rd /S /Q "bin"
 rd /S /Q "obj"
-rd /S /Q "..\..\Release"
-rd /S /Q "..\..\x64"
 
 echo ==========================================================
 echo                  build dotnet exe finish!
