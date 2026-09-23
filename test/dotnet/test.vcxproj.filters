@@ -111,8 +111,5 @@
     <MASM Include="..\..\asm\msvc\ullshr.asm">
       <Filter>Assembly\MSVC</Filter>
     </MASM>
-    <MASM Include="..\..\asm\pe_loader.asm">
-      <Filter>Assembly</Filter>
-    </MASM>
   </ItemGroup>
 </Project>
