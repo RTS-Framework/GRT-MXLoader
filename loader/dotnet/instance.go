@@ -3,7 +3,6 @@ package dotnet
 import (
 	"bytes"
 	"embed"
-	"errors"
 	"fmt"
 
 	"github.com/RTS-Framework/GRT-Develop/argument"
@@ -31,6 +30,15 @@ type Options struct {
 	// set the command line argument about the image.
 	CommandLine string `toml:"cmd_line" json:"cmd_line"`
 
+	// set the export class name for dll.
+	Class string `toml:"class" json:"class"`
+
+	// set the export method name for dll.
+	Method string `toml:"method" json:"method"`
+
+	// set argument for call the dll export method.
+	Argument string `toml:"argument" json:"argument"`
+
 	// wait Main() or target function execute finish.
 	Wait bool `toml:"wait" json:"wait"`
 
@@ -39,10 +47,6 @@ type Options struct {
 
 	// set instantiate options about runtime.
 	Runtime instance.Options `toml:"runtime" json:"runtime"`
-
-	// set additional arguments for upper image.
-	// all the ID must greater than 64.
-	Arguments []*argument.Arg `toml:"arguments" json:"arguments"`
 }
 
 // CreateInstance is used to create instance from template.
@@ -56,9 +60,23 @@ func CreateInstance(arch string, image loader.Payload, opts *Options) ([]byte, e
 		return nil, fmt.Errorf("invalid %s mode config: %s", image.Mode(), err)
 	}
 	// process command line
-	var cmdLine []byte
+	var (
+		cmdLine []byte
+		class   []byte
+		method  []byte
+		mArg    []byte
+	)
 	if opts.CommandLine != "" {
 		cmdLine = types.StringToUTF16(opts.CommandLine)
+	}
+	if opts.Class != "" {
+		class = []byte(opts.Class)
+	}
+	if opts.Method != "" {
+		method = []byte(opts.Method)
+	}
+	if opts.Argument != "" {
+		mArg = types.StringToUTF16(opts.Argument)
 	}
 	// process wait flag
 	wait := encodeToBOOL(opts.Wait)
@@ -85,14 +103,10 @@ func CreateInstance(arch string, image loader.Payload, opts *Options) ([]byte, e
 	args := []*argument.Arg{
 		{ID: 1, Data: peImage},
 		{ID: 2, Data: cmdLine},
-		{ID: 3, Data: wait},
-	}
-	// process additional arguments
-	for _, arg := range opts.Arguments {
-		if arg.ID <= 64 {
-			return nil, errors.New("additional argument id must greater than 64")
-		}
-		args = append(args, arg)
+		{ID: 3, Data: class},
+		{ID: 4, Data: method},
+		{ID: 5, Data: mArg},
+		{ID: 6, Data: wait},
 	}
 	stub, err := argument.Encode(args...)
 	if err != nil {
