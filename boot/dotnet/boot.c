@@ -33,7 +33,7 @@ errno Boot(void* ctx)
     Runtime_M* runtime = NULL;
     if (testCtx == NULL)
     {
-        runtime = initRuntime();
+        runtime = InitRuntime(GetFuncAddr(&Boot), NULL);
         if (runtime == NULL)
         {
             return GetLastErrno();
@@ -68,12 +68,16 @@ errno Boot(void* ctx)
         } else {
             image = testCtx->Image;
             config.CommandLine = testCtx->CommandLine;
-            config.Wait = true;
+            config.Class       = testCtx->Class;
+            config.Method      = testCtx->Method;
+            config.Argument    = testCtx->Argument;
+            config.Wait        = true;
         }
         // prepare .NET runtime
 
-        runtime->Memory.Free(image);
 
+
+        runtime->Memory.Free(image);
         break;
     }
     if (err != NO_ERROR)
@@ -103,9 +107,21 @@ static errno loadConfig(Runtime_M* runtime, Config* config)
     {
         return ERR_EMPTY_PE_IMAGE_DATA;
     }
-    if (!runtime->Argument.GetValue(ARG_ID_CMDLINE, &config->CommandLine, &size))
+    if (!runtime->Argument.GetPointer(ARG_ID_CMDLINE, &config->CommandLine, NULL))
     {
         return ERR_NOT_FOUND_CMDLINE;
+    }
+    if (!runtime->Argument.GetPointer(ARG_ID_CLASS, &config->Class, NULL))
+    {
+        return ERR_NOT_FOUND_CLASS;
+    }
+    if (!runtime->Argument.GetPointer(ARG_ID_METHOD, &config->Method, NULL))
+    {
+        return ERR_NOT_FOUND_METHOD;
+    }
+    if (!runtime->Argument.GetPointer(ARG_ID_ARGUMENT, &config->Argument, NULL))
+    {
+        return ERR_NOT_FOUND_ARGUMENT;
     }
     if (!runtime->Argument.GetValue(ARG_ID_WAIT, &config->Wait, &size))
     {
