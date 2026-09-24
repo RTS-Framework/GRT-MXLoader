@@ -13,15 +13,15 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cs-beacon", "builder\cs-bea
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dotnet", "builder\dotnet\dotnet.vcxproj", "{23EAF647-A967-4A1F-8C05-601B0D7638DB}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cs-beacon", "payload\cs-beacon\payload.vcxproj", "{49FFEB54-1F63-4430-AE09-E9A111143869}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cs-beacon", "payload\cs-beacon\cs-beacon.vcxproj", "{49FFEB54-1F63-4430-AE09-E9A111143869}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotnet_exe", "payload\dotnet_exe\dotnet_exe.csproj", "{CEE4E8EB-637C-40E7-9E19-5996537CBB4D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotnet_dll", "payload\dotnet_dll\dotnet_dll.csproj", "{C9FBA124-FB25-4CE6-A365-EE0A9E4F84E5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cs-beacon", "test\cs-beacon\test.vcxproj", "{9923A7BB-EEEE-45D1-8E47-DD54792C9EBF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cs-beacon", "test\cs-beacon\cs-beacon.vcxproj", "{9923A7BB-EEEE-45D1-8E47-DD54792C9EBF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dotnet", "test\dotnet\test.vcxproj", "{77A38B90-2625-4FD2-8415-42CEA105C9C1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dotnet", "test\dotnet\dotnet.vcxproj", "{77A38B90-2625-4FD2-8415-42CEA105C9C1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
