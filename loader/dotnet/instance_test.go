@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/RTS-Framework/GRT-Develop/argument"
 	"github.com/RTS-Framework/GRT-MXLoader/loader"
 )
 
@@ -47,7 +46,19 @@ func TestCreateInstance(t *testing.T) {
 		require.NotNil(t, inst)
 	})
 
-	t.Run("wait", func(t *testing.T) {
+	t.Run("with method caller", func(t *testing.T) {
+		opts := Options{
+			Class:    "Test",
+			Method:   "Method0",
+			Argument: "arg0 arg1",
+		}
+
+		inst, err := CreateInstance("386", image, &opts)
+		require.NoError(t, err)
+		require.NotNil(t, inst)
+	})
+
+	t.Run("with wait", func(t *testing.T) {
 		opts := Options{
 			Wait: true,
 		}
@@ -68,35 +79,6 @@ func TestCreateInstance(t *testing.T) {
 		inst, err := CreateInstance("386", image, &opts)
 		require.NoError(t, err)
 		require.NotNil(t, inst)
-	})
-
-	t.Run("with additional arguments", func(t *testing.T) {
-		t.Run("common", func(t *testing.T) {
-			args := []*argument.Arg{
-				{ID: 100, Data: []byte("config data")},
-			}
-			opts := Options{
-				Arguments: args,
-			}
-
-			inst, err := CreateInstance("386", image, &opts)
-			require.NoError(t, err)
-			require.NotNil(t, inst)
-		})
-
-		t.Run("invalid id", func(t *testing.T) {
-			args := []*argument.Arg{
-				{ID: 1, Data: []byte("config data")},
-			}
-			opts := Options{
-				Arguments: args,
-			}
-
-			inst, err := CreateInstance("386", image, &opts)
-			errStr := "additional argument id must greater than 64"
-			require.EqualError(t, err, errStr)
-			require.Nil(t, inst)
-		})
 	})
 
 	t.Run("invalid image", func(t *testing.T) {
@@ -125,21 +107,6 @@ func TestCreateInstance(t *testing.T) {
 
 		inst, err := CreateInstance("386", image, &opts)
 		require.EqualError(t, err, "invalid runtime template")
-		require.Nil(t, inst)
-	})
-
-	t.Run("same argument id", func(t *testing.T) {
-		args := []*argument.Arg{
-			{ID: 100, Data: []byte("config data 1")},
-			{ID: 100, Data: []byte("config data 2")},
-		}
-		opts := Options{
-			Arguments: args,
-		}
-
-		inst, err := CreateInstance("386", image, &opts)
-		errStr := "failed to encode argument: argument id 100 already exists"
-		require.EqualError(t, err, errStr)
 		require.Nil(t, inst)
 	})
 }
