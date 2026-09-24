@@ -22,7 +22,7 @@
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{49ffeb54-1f63-4430-ae09-e9a111143869}</ProjectGuid>
-    <RootNamespace>cs_beacon</RootNamespace>
+    <RootNamespace>payload_cs-beacon</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>cs-beacon</ProjectName>
   </PropertyGroup>
