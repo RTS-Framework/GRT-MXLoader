@@ -41,6 +41,9 @@
     <ClCompile Include="..\..\src\pe_image.c">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="test.c">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test.h">
