@@ -64,7 +64,7 @@
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{9923A7BB-EEEE-45D1-8E47-DD54792C9EBF}</ProjectGuid>
-    <RootNamespace>test</RootNamespace>
+    <RootNamespace>test_cs-beacon</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>cs-beacon</ProjectName>
   </PropertyGroup>
@@ -98,11 +98,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <GenerateManifest>false</GenerateManifest>
-    <TargetName>test</TargetName>
+    <TargetName>test_$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <GenerateManifest>false</GenerateManifest>
-    <TargetName>test</TargetName>
+    <TargetName>test_$(ProjectName)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
